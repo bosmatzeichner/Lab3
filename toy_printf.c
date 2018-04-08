@@ -80,8 +80,6 @@ int print_int(int n, int radix, const char * digit) {
         return 1 + print_int_helper(-n, radix, digit);
     }
 }
-
-
 int print_array(int* n, int size, int radix, const char * digit) {
     int num=0;
     int element;
@@ -266,7 +264,7 @@ int handle_print_s(va_list args,state_args* state){
             putchar(' ');
         }
         putchar('"');
-        chars_printed += putchar(string_array[i]);
+        chars_printed += print_string(string_array[i]);
         putchar('"');
         putchar('}');
     }
@@ -362,7 +360,7 @@ int handle_print_zero(va_list args,state_args* state){
 enum printf_state init_precentState_handler(int* out_printed_chars, state_args* state ) {
     switch (*(state->fs)) {
         case '%':
-            *out_printed_chars = &handle_precent1;
+            *out_printed_chars = handle_precent1;
             return st_printf_init;
         case 'd':
             *out_printed_chars = &handle_print_d;
@@ -418,21 +416,20 @@ enum printf_state init_printfState_handler(int* out_printed_chars, state_args* s
     }
 
 }
-
+int handler_printed_chars(va_list args,struct state_args* sa);
 /* SUPPORTED:
  *   %b, %d, %o, %x, %X
  *   and nowww also %u--
  *     integers in binary, decimal, octal, hex, and HEX
  *   %s -- strings
  */
-
 int toy_printf(char *fs, ...) {
     int chars_printed= 0;
     va_list args;
-    enum printf_state state;
     //int (*handler_printed_chars)(int);
     //int (*handler_printed_chars)(va_list args,state_args* state);
     int (*handler_printed_chars) (va_list ,struct state_args*);
+    //handler_printed_chars = &handler_printed_chars;
     struct state_args * sa = malloc(sizeof(*sa));
     sa->fs = fs;
     va_start(args, fs);
@@ -448,7 +445,7 @@ int toy_printf(char *fs, ...) {
                 chars_printed += handler_printed_chars(args,sa);
                 break;
             default:
-                toy_printf("toy_printf: Unknown state -- %d\n", (int)state);
+                toy_printf("toy_printf: Unknown state -- %d\n", (int)sa->state);
                 exit(-1);
         }
     }
