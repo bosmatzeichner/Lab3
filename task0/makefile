@@ -2,12 +2,12 @@
 #{-tab-}actions
 
 # All Targets
-all: task1
+all: task0
 
 # Tool invocations
 # Executable "main[1]" depends on the files main[1].o 
-task1: main.o toy_printf.o
-	gcc -g -Wall -o task1 main.o toy_printf.o
+task0: main.o toy_printf.o
+	gcc -g -Wall -o task0 main.o toy_printf.o
 
 # Depends on the source and header files
 main.o: main.c 
@@ -19,4 +19,4 @@ toy_printf.o: toy_printf.c
 
 #Clean the build directory
 clean: 
-	rm -f *.o task1
+	rm -f *.o task0
