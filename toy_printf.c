@@ -16,7 +16,7 @@ enum printf_state {
 typedef struct state_args {
     char* fs;
     enum printf_state state;
-    int width, array, i, array_length, input_size,toAdd, printed, ind, left_blanks, blanks, placeholders;
+    int width, array, left_blanks, blanks, placeholders;
 } state_args;
 #define MAX_NUMBER_LENGTH 64
 #define is_octal_char(ch) ('0' <= (ch) && (ch) <= '7')
@@ -157,23 +157,21 @@ int print_width(int n, int radix, const char * digit, state_args* state){
     state->width=0;
     return result;
 }
-int handle_default(va_list args,state_args* state) {
-    if (state->state = st_printf_init)
-        return 1;
-    else{
+int handle_default1(va_list args,state_args* state) {
         toy_printf("Unhandled format %%%c...\n", *(state->fs));
         exit(-1);
-    }}
-int handle_precent(va_list args,state_args* state) {
-    if (state->state == st_printf_percent){
-        putchar('%');
-        state->state = st_printf_init;
-        return 1;
-    }
-    else{
-        state->state = st_printf_percent;
-        return 0;
-    }
+}
+int handle_default2(va_list args,state_args* state) {
+    putchar(*state->fs);
+    return 1;
+}
+int handle_precent1(va_list args,state_args* state) {
+    putchar('%');
+    return 1;
+
+}
+int handle_initPrecent(va_list args,state_args* state) {
+    return 0;
 }
 int handle_print_d(va_list args,state_args* state){
     if (state->array){
@@ -253,13 +251,13 @@ int handle_print_X(va_list args,state_args* state){
     }
 }
 int handle_print_s(va_list args,state_args* state){
-    int chars_printed,count;
+    int chars_printed=0,count=0;
     if (state->array){
         state->array=0;
         string_array = va_arg(args, char**);
         int input_size = va_arg(args, int);
         putchar('{');
-        int i;
+        int i=0;
         for (i = 0; i < input_size-1; i++){
             putchar('"');
             chars_printed += print_string(string_array[i]);
@@ -361,61 +359,64 @@ int handle_print_zero(va_list args,state_args* state){
         state->blanks = 10*(state->blanks);
     }
 }
-enum printf_state init_precentState_handler(va_list args, int* out_printed_chars, state_args* state) {
+enum printf_state init_precentState_handler(int* out_printed_chars, state_args* state ) {
     switch (*(state->fs)) {
         case '%':
-            out_printed_chars = &handle_precent;
+            *out_printed_chars = &handle_precent1;
             return st_printf_init;
         case 'd':
-            out_printed_chars = &handle_print_d;
+            *out_printed_chars = &handle_print_d;
             return st_printf_init;
         case 'u':
-            out_printed_chars = &handle_print_u;
+            *out_printed_chars = &handle_print_u;
             return st_printf_init;
         case 'b':
-            out_printed_chars = &handle_print_b;
+            *out_printed_chars = &handle_print_b;
             return st_printf_init;
         case 'o':
-            out_printed_chars = &handle_print_o;
+            *out_printed_chars = &handle_print_o;
             return st_printf_init;
         case 'x':
-            out_printed_chars = &handle_print_x;
+            *out_printed_chars = &handle_print_x;
             return st_printf_init;
         case 'X':
-            out_printed_chars = &handle_print_X;
+            *out_printed_chars = &handle_print_X;
             return st_printf_init;
         case 's':
-            out_printed_chars = &handle_print_s;
+            *out_printed_chars = &handle_print_s;
             return st_printf_init;
         case 'c':
-            out_printed_chars = &handle_print_c;
+            *out_printed_chars = &handle_print_c;
             return st_printf_init;
         case 'A':
-            out_printed_chars = &handle_print_A;
+            *out_printed_chars = &handle_print_A;
             return st_printf_percent;
         case 49 ... 57:
-            out_printed_chars = &handle_print_number;
+            *out_printed_chars = &handle_print_number;
             return st_printf_percent;
         case '-':
-            out_printed_chars = &handle_print_minus;
+            *out_printed_chars = &handle_print_minus;
             return st_printf_percent;
         case '0':
-            out_printed_chars = &handle_print_zero;
+            *out_printed_chars = &handle_print_zero;
             return st_printf_percent;
         default:
+            *out_printed_chars = &handle_default1;
+            return st_printf_init;
 
     }
 }
-enum printf_state init_printfState_handler(va_list args, int* out_printed_chars, state_args* state) {
+enum printf_state init_printfState_handler(int* out_printed_chars, state_args* state) {
     switch (*(state->fs)) {
         case '%':
-            out_printed_chars = &handle_precent;
+            *out_printed_chars = &handle_initPrecent;
             return st_printf_percent;
         default:
-            out_printed_chars = &handle_default;
+            *out_printed_chars = &handle_default2;
             return st_printf_init;
 
     }
+
 }
 
 /* SUPPORTED:
@@ -431,21 +432,20 @@ int toy_printf(char *fs, ...) {
     enum printf_state state;
     //int (*handler_printed_chars)(int);
     //int (*handler_printed_chars)(va_list args,state_args* state);
-    int handler_printed_chars;
+    int (*handler_printed_chars) (va_list ,struct state_args*);
     struct state_args * sa = malloc(sizeof(*sa));
     sa->fs = fs;
     va_start(args, fs);
-    state = st_printf_init;
-    sa->state = state;
+    sa->state = st_printf_init;;
     for (;  *(sa->fs) != '\0'; ++sa->fs) {
         switch (sa->state) {
             case st_printf_init:
-                state = init_printfState_handler(args, &handler_printed_chars, sa);
-                chars_printed += handler_printed_chars;
+                sa->state = init_printfState_handler(&handler_printed_chars, sa);
+                chars_printed += handler_printed_chars(args,sa);
                 break;
             case st_printf_percent:
-                state = init_precentState_handler(args, &handler_printed_chars, sa);
-                chars_printed += handler_printed_chars;
+                sa->state = init_precentState_handler(&handler_printed_chars, sa);
+                chars_printed += handler_printed_chars(args,sa);
                 break;
             default:
                 toy_printf("toy_printf: Unknown state -- %d\n", (int)state);
