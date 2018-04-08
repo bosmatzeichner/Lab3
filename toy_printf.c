@@ -80,6 +80,8 @@ int print_int(int n, int radix, const char * digit) {
         return 1 + print_int_helper(-n, radix, digit);
     }
 }
+
+
 int print_array(int* n, int size, int radix, const char * digit) {
     int num=0;
     int element;
@@ -89,6 +91,7 @@ int print_array(int* n, int size, int radix, const char * digit) {
     }
     ++num;
     putchar('{');
+    int i;
     for (i = 0; i < size-1; i++){
         element = n[i];
         num +=print_int(element,radix,digit);
@@ -102,6 +105,7 @@ int print_array(int* n, int size, int radix, const char * digit) {
 
 }
 int print_string(char* string_value){
+    int printed;
     while(*string_value){
         printed++;
         putchar(*string_value);
@@ -109,7 +113,7 @@ int print_string(char* string_value){
     }
     return printed;
 }
-int print_width(int n, int radix, const char * digit){
+int print_width(int n, int radix, const char * digit, state_args* state){
     int result;
     int x=n;
     int count=1;
@@ -123,35 +127,34 @@ int print_width(int n, int radix, const char * digit){
         x= x/10;
     }
     result=count;
-    if (placeholders && count<blanks){
-        result=blanks;
+    if (state->placeholders && count < state->blanks){
+        result=state->blanks;
         if (n<0){
             putchar('-');
             n=-n;
         }
-        for(ind=0; ind<blanks-count; ind++){
+        for(ind=0; ind<state->blanks-count; ind++){
             putchar('0');
         }
     }
-    if (left_blanks&&!placeholders && count<blanks){
-        result=blanks;
-        for(ind=0; ind< blanks-count; ind++){
+    if (state->left_blanks&&!state->placeholders && count<state->blanks){
+        result=state->blanks;
+        for(ind=0; ind< state->blanks-count; ind++){
             putchar(' ');
         }
     }
-    print_int(n, 10, digit);
-    if(!left_blanks&& !placeholders && count<blanks){
-        result=blanks;
-        for(ind=0; ind<blanks-count; ind++){
+    print_int(n, radix, digit);
+    if(!state->left_blanks&& !state->placeholders && count<state->blanks){
+        result=state->blanks;
+        for(ind=0; ind<state->blanks-count; ind++){
             putchar(' ');
         }
         putchar('#');
     }
-    blanks=0;
-    left_blanks=0;
-    placeholders=0;
-    count=0;
-    width=0;
+    state->blanks=0;
+    state->left_blanks=0;
+    state->placeholders=0;
+    state->width=0;
     return result;
 }
 int handle_default(va_list args,state_args* state) {
@@ -182,7 +185,7 @@ int handle_print_d(va_list args,state_args* state){
     else{
         int int_value = va_arg(args, int);
         if (state->width){
-            return print_width(int_value, 10, digit);
+            return print_width(int_value, 10, digit, state);
         }
         else{
             return print_int(int_value, 10, digit);
