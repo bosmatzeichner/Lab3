@@ -403,11 +403,13 @@ struct state_result* init_precentState_handler(struct state_result* sr, va_list 
     handlersArray['u'] = handle_print_u;
     handlersArray['b'] = handle_print_b; 
     handlersArray['o'] = handle_print_o;
-    handlersArray['x'] = handle_print_o;
-    handlersArray['s'] = handle_print_o;
-    handlersArray['c'] = handle_print_o;
+    handlersArray['x'] = handle_print_x;
+    handlersArray['s'] = handle_print_s;
+    handlersArray['c'] = handle_print_c;
     handlersArray['A'] = handle_print_A;
     handlersArray['0'] = handle_print_zero;
+    handlersArray['-'] = handle_print_minus;
+
     for (int num = 49 ; num < 58 ; num++)
         handlersArray[num] = &handle_print_number;
     
