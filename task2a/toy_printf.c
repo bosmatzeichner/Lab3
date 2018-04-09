@@ -161,299 +161,250 @@ int print_width(int n, int radix, const char * digit, state_args* state){
     state->width=0;
     return result;
 }
-int handle_default1(va_list args,state_args* state) {
-        toy_printf("Unhandled format %%%c...\n", *(state->fs));
-        exit(-1);
-}
-int handle_default2(va_list args,state_args* state) {
-    putchar(*state->fs);
-    return 1;
-}
-int handle_precent1(va_list args,state_args* state) {
-    putchar('%');
-    return 1;
 
-}
-int handle_initPrecent(va_list args,state_args* state) {
-    return 0;
-}
-int handle_print_d(va_list args,state_args* state){
-    if (state->array){
-        state->array=0;
-        int *int_array = va_arg(args, int*);
-        int input_size = va_arg(args, int);
-        return print_array(int_array, input_size, 10, digit);
-    }
-    else{
-        int int_value = va_arg(args, int);
-        if (state->width){
-            return print_width(int_value, 10, digit, state);
-        }
-        else{
-            return print_int(int_value, 10, digit);
-        }
-    }
-}
-int handle_print_u(va_list args,state_args* state) {
-    unsigned_decimal = 1;
-    if (state->array) {
-        state->array=0;
-        int_array = va_arg(args, int*);
-        int input_size = va_arg(args, int);
-        return print_array(int_array, input_size, 10, digit);
-    } else {
-        int int_value = va_arg(args, int);
-        return print_int(int_value, 10, digit);
-    }
-}
-int handle_print_b(va_list args,state_args* state){
-    if (state->array){
-        state->array=0;
-        int_array = va_arg(args, int*);
-        int input_size = va_arg(args, int);
-        return print_array(int_array, input_size, 10, digit);
-    }
-    else{
-        int int_value = va_arg(args, int);
-        return print_int(int_value, 2, digit);
-    }
-}
-int handle_print_o(va_list args,state_args* state){
-    if (state->array){
-        state->array=0;
-        int_array = va_arg(args, int*);
-        int input_size = va_arg(args, int);
-        return print_array(int_array, input_size, 10, digit);
-    }
-    else{
-        int int_value = va_arg(args, int);
-        return print_int(int_value, 8, digit);
-    }
-}
-int handle_print_x(va_list args,state_args* state){
-    if (state->array){
-        state->array=0;
-        int_array = va_arg(args, int*);
-        int input_size = va_arg(args, int);
-        return print_array(int_array, input_size, 10, digit);
-    }
-    else{
-        int int_value = va_arg(args, int);
-        return print_int(int_value, 16, digit);
-    }
-}
-int handle_print_X(va_list args,state_args* state){
-    if (state->array){
-        state->array=0;
-        int_array = va_arg(args, int*);
-        int input_size = va_arg(args, int);
-        return print_array(int_array, input_size, 10, digit);
-    }
-    else{
-        int int_value = va_arg(args, int);
-        return print_int(int_value, 16, DIGIT);
-    }
-}
-int handle_print_s(va_list args,state_args* state){
-    int chars_printed=0,count=0;
-    if (state->array){
-        state->array=0;
-        string_array = va_arg(args, char**);
-        int input_size = va_arg(args, int);
-        putchar('{');
-        int i=0;
-        for (i = 0; i < input_size-1; i++){
-            putchar('"');
-            chars_printed += print_string(string_array[i]);
-            putchar('"');
-            putchar(',');
-            putchar(' ');
-        }
-        putchar('"');
-        chars_printed += print_string(string_array[i]);
-        putchar('"');
-        putchar('}');
-    }
-    else{
-        char* string_value = va_arg(args, char *);
-        int ind=0;
-        while(string_value[ind]!= '\0'){
-            count++;
-            ind++;
-        }
-        chars_printed+=count;
-
-        if (state->blanks&& state->placeholders&& count<state->blanks){
-            for(ind=0; ind<state->blanks-count; ind++){
-                putchar('0');
-            }
-            chars_printed+=state->blanks-count;
-        }
-        if (state->blanks && state->left_blanks&& !state->placeholders && count<state->blanks){
-            for(ind=0; ind< state->blanks-count; ind++){
-                putchar(' ');
-            }
-            chars_printed+=state->blanks-count;
-
-        }
-        print_string(string_value);
-
-        if (!state->left_blanks && state->blanks && !state->placeholders&& count<state->blanks){
-            for(ind=0; ind<state->blanks-count; ind++){
-                putchar(' ');
-            }
-            putchar('#');
-            chars_printed+=state->blanks-count+1;
-        }
-        state->blanks=0;
-        state->left_blanks=0;
-        state->placeholders=0;
-        state->width=0;
-    }
-    return chars_printed;
-}
-int handle_print_c(va_list args,state_args* state){
-    int chars_printed;
-    if (state->array){
-        state->array=0;
-        char_array = va_arg(args, char*);
-        int input_size = va_arg(args, int);
-        putchar('{');
-        chars_printed++;
-        int ind;
-        for(ind = 0; ind<input_size-1; ind++){
-            putchar('\'');
-            putchar(char_array[ind]);
-            putchar('\'');
-            putchar(',');
-            putchar(' ');
-            chars_printed+=5;
-        }
-        putchar('\'');
-        putchar(char_array[ind]);
-        putchar('\'');
-        putchar('}');
-        chars_printed+=4;
-
-    }
-    else{
-        char char_value = (char)va_arg(args, int);
-        putchar(char_value);
-        ++chars_printed;
-    }
-    return chars_printed;
-}
-int handle_print_A(va_list args,state_args* state){
-    state->array=1;
-    return 0;
-}
-int handle_print_number(va_list args,state_args* state){
-    state->width = 1;
-    int number_of_blanks = 10*(state->blanks)+(*(state->fs)- 48);
-    state->blanks =number_of_blanks;
-    return 0;
-}
-int handle_print_minus(va_list args,state_args* state){
-    state-> left_blanks = 1;
-}
-int handle_print_zero(va_list args,state_args* state){
-    if (state->width==0)
-        state->placeholders++;
-    else {
-        state->blanks = 10*(state->blanks);
-    }
-}
 
 struct state_result* init_precentState_handler(struct state_result* sr, va_list args ) {
-    int (*handler_printed_chars) (va_list ,struct state_args*);
+    int chars_printed = 0;
+    struct state_args *state = sr->state;
 
     switch (*(((state_args*)(sr->state))->fs)) {
         case '%':
-            handler_printed_chars = &handle_precent1;
+            putchar('%');
+            chars_printed = 1;
             sr->new_state = st_printf_init;
             break;
 
         case 'd':
-            handler_printed_chars = &handle_print_d;
+            if (state->array){
+                state->array=0;
+                int *int_array = va_arg(args, int*);
+                int input_size = va_arg(args, int);
+                chars_printed = print_array(int_array, input_size, 10, digit);
+            }
+            else{
+                int int_value = va_arg(args, int);
+                if (state->width){
+                    chars_printed = print_width(int_value, 10, digit, state);
+                }
+                else{
+                    chars_printed = print_int(int_value, 10, digit);
+                }
+            }
+            
             sr->new_state = st_printf_init;
             break;
 
         case 'u':
-            handler_printed_chars = &handle_print_u;
+            unsigned_decimal = 1;
+            if (state->array) {
+                state->array=0;
+                int_array = va_arg(args, int*);
+                int input_size = va_arg(args, int);
+                chars_printed = print_array(int_array, input_size, 10, digit);
+            } else {
+                int int_value = va_arg(args, int);
+                chars_printed = print_int(int_value, 10, digit);
+            }
             sr->new_state = st_printf_init;
             break;
 
         case 'b':
-            handler_printed_chars = &handle_print_b;
+            if (state->array){
+                state->array=0;
+                int_array = va_arg(args, int*);
+                int input_size = va_arg(args, int);
+                chars_printed = print_array(int_array, input_size, 10, digit);
+            }
+            else{
+                int int_value = va_arg(args, int);
+                chars_printed = print_int(int_value, 2, digit);
+            }
             sr->new_state = st_printf_init;
             break;
 
         case 'o':
-            handler_printed_chars = &handle_print_o;
+            if (state->array){
+                state->array=0;
+                int_array = va_arg(args, int*);
+                int input_size = va_arg(args, int);
+                chars_printed = print_array(int_array, input_size, 10, digit);
+            }
+            else{
+                int int_value = va_arg(args, int);
+                chars_printed = print_int(int_value, 8, digit);
+            }
             sr->new_state = st_printf_init;
             break;
 
         case 'x':
-            handler_printed_chars = &handle_print_x;
-            sr->new_state = st_printf_init;
-            break;
+            if (state->array){
+                state->array=0;
+                int_array = va_arg(args, int*);
+                int input_size = va_arg(args, int);
+                chars_printed = print_array(int_array, input_size, 10, digit);
+                }
+            else{
+                int int_value = va_arg(args, int);
+                chars_printed = print_int(int_value, 16, digit);
+            }
+                sr->new_state = st_printf_init;
+                break;
 
         case 'X':
-            handler_printed_chars = &handle_print_X;
+            if (state->array){
+                state->array=0;
+                int_array = va_arg(args, int*);
+                int input_size = va_arg(args, int);
+                chars_printed = print_array(int_array, input_size, 10, digit);
+                }
+            else{
+                int int_value = va_arg(args, int);
+                chars_printed = print_int(int_value, 16, DIGIT);
+            }
             sr->new_state = st_printf_init;
             break;
 
-        case 's':
-            handler_printed_chars = &handle_print_s;
-            sr->new_state = st_printf_init;
-            break;
+        case 's':    
+            if (state->array){
+                state->array=0;
+                string_array = va_arg(args, char**);
+                int input_size = va_arg(args, int);
+                putchar('{');
+                int i=0;
+                for (i = 0; i < input_size-1; i++){
+                    putchar('"');
+                    chars_printed += print_string(string_array[i]);
+                    putchar('"');
+                    putchar(',');
+                    putchar(' ');
+                }
+                putchar('"');
+                chars_printed += print_string(string_array[i]);
+                putchar('"');
+                putchar('}');
+            }
+            else{
+                int count=0;
+                char* string_value = va_arg(args, char *);
+                int ind=0;
+                while(string_value[ind]!= '\0'){
+                    count++;
+                    ind++;
+                }
+                chars_printed+=count;
+
+                if (state->blanks&& state->placeholders&& count<state->blanks){
+                    for(ind=0; ind<state->blanks-count; ind++){
+                        putchar('0');
+                    }
+                    chars_printed+=state->blanks-count;
+                }
+                if (state->blanks && state->left_blanks&& !state->placeholders && count<state->blanks){
+                    for(ind=0; ind< state->blanks-count; ind++){
+                        putchar(' ');
+                    }
+                    chars_printed+=state->blanks-count;
+
+                }
+                print_string(string_value);
+
+                if (!state->left_blanks && state->blanks && !state->placeholders&& count<state->blanks){
+                    for(ind=0; ind<state->blanks-count; ind++){
+                        putchar(' ');
+                    }
+                    putchar('#');
+                    chars_printed+=state->blanks-count+1;
+                }
+                state->blanks=0;
+                state->left_blanks=0;
+                state->placeholders=0;
+                state->width=0;
+            }
+                    sr->new_state = st_printf_init;
+                    break;
 
         case 'c':
-            handler_printed_chars = &handle_print_c;
+            if (state->array){
+                state->array=0;
+                char_array = va_arg(args, char*);
+                int input_size = va_arg(args, int);
+                putchar('{');
+                chars_printed++;
+                int ind;
+                for(ind = 0; ind<input_size-1; ind++){
+                    putchar('\'');
+                    putchar(char_array[ind]);
+                    putchar('\'');
+                    putchar(',');
+                    putchar(' ');
+                    chars_printed+=5;
+                }
+                putchar('\'');
+                putchar(char_array[ind]);
+                putchar('\'');
+                putchar('}');
+                chars_printed+=4;
+
+            }
+            else{
+                char char_value = (char)va_arg(args, int);
+                putchar(char_value);
+                ++chars_printed;
+            }
             sr->new_state = st_printf_init;
             break;
 
         case 'A':
-            handler_printed_chars = &handle_print_A;
+            state->array=1;
+            chars_printed = 0;   
             sr->new_state = st_printf_percent;
             break;
 
         case 49 ... 57:
-            handler_printed_chars = &handle_print_number;
+            state->width = 1;
+            int number_of_blanks = 10*(state->blanks)+(*(state->fs)- 48);
+            state->blanks =number_of_blanks;
+            chars_printed = 0;
             sr->new_state = st_printf_percent;
             break;
 
         case '-':
-            handler_printed_chars = &handle_print_minus;
+            state-> left_blanks = 1;
             sr->new_state = st_printf_percent;
             break;
 
         case '0':
-            handler_printed_chars = &handle_print_zero;
+            if (state->width==0)
+                state->placeholders++;
+            else {
+                state->blanks = 10*(state->blanks);
+            }     
             sr->new_state = st_printf_percent;
             break;
+        
         default:
-            handler_printed_chars = &handle_default1;
+            toy_printf("Unhandled format %%%c...\n", *(state->fs));
+            exit(-1);
             sr->new_state = st_printf_init;
 
     }
-    struct state_args* sa = sr->state;
-    sr->printed_chars += handler_printed_chars(args,sa);
+    sr->printed_chars += chars_printed;
     return sr;
 }
 struct state_result* init_printfState_handler(struct state_result* sr, va_list args) {
-    int (*handler_printed_chars) (va_list ,struct state_args*);
+    int chars_printed = 0;
+    struct state_args *state = sr->state;
     switch (*(((state_args*)(sr->state))->fs)) {
         case '%':
-            handler_printed_chars = &handle_initPrecent;
+            chars_printed = 0;
             sr->new_state = st_printf_percent;
             break;
         default:
-            handler_printed_chars = &handle_default2;
+            putchar(*state->fs);
+            chars_printed = 1;
             sr->new_state = st_printf_init;
     }
-    struct state_args* sa = sr->state;
-    sr->printed_chars += handler_printed_chars(args,sa);
+    sr->printed_chars += chars_printed;
     return sr;
 }
 /* SUPPORTED:
@@ -485,7 +436,10 @@ int toy_printf(char *fs, ...) {
         }
     }
     va_end(args);
-    return  sr->printed_chars;
+    chars_printed = sr->printed_chars;
+    free(sa);
+    free(sr);
+    return  chars_printed;
 }
 
 
